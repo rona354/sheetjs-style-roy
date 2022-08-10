@@ -13,7 +13,7 @@
 
 ## install
 ```
-npm install sheetjs-style
+npm install sheetjs-style-roy
 ```
 
 ## How to Use?
