@@ -9634,7 +9634,7 @@ function make_xlsx_lib(XLSX) {
 		write_FONTS_bin(ba, wb);
 		write_FILLS_bin(ba, wb);
 		write_BORDERS_bin(ba, wb);
-		// write_CELLSTYLEXFS_bin(ba, wb);
+		write_CELLSTYLEXFS_bin(ba, wb);
 		write_CELLXFS_bin(ba, opts.cellXfs);
 		write_STYLES_bin(ba, wb);
 		write_DXFS_bin(ba, wb);
@@ -13342,11 +13342,11 @@ function make_xlsx_lib(XLSX) {
 	}
 
 	function write_ws_xml_cell(cell, ref, ws, opts) {
-		// if (cell.v === undefined && cell.f === undefined || cell.t === 'z') return "";
+		// if(cell.v === undefined && cell.f === undefined || cell.t === 'z') return "";
 		if (cell.v === undefined && cell.f === undefined) return "";
 		var vv = "";
 		var oldt = cell.t, oldv = cell.v;
-		// if (cell.t !== "z") switch (cell.t) {
+		// if(cell.t !== "z") switch(cell.t) {
 		switch (cell.t) {
 			case 'b': vv = cell.v ? "1" : "0"; break;
 			case 'n': vv = '' + cell.v; break;
@@ -14196,7 +14196,7 @@ function make_xlsx_lib(XLSX) {
 						case 'e': p.v = val[1]; if (opts.cellText !== false) p.w = BErr[p.v]; break;
 						case 'str': p.t = 's'; p.v = val[1]; break;
 					}
-					if ((cf = styles.CellXf[val[0].iStyleRef])) safe_format(p, cf.numFmtId, null, opts, themes, styles);
+					if ((cf = styles.CellXf[val[0].iStyleRef])) safe_format(p, cf, opts, themes, styles);
 					C = val[0].c;
 					if (opts.dense) { if (!s[R]) s[R] = []; s[R][C] = p; }
 					else s[encode_col(C) + rr] = p;
@@ -16857,7 +16857,6 @@ function make_xlsx_lib(XLSX) {
 			return XLSIcv[icv];
 		};
 		var process_cell_style = function pcs(cell, line, options) {
-			console.log(cell, line)
 			var xfd = line.XF.data;
 			if (!xfd || !xfd.patternType || !options || !options.cellStyles) return;
 			line.s = ({});
@@ -20850,7 +20849,6 @@ function make_xlsx_lib(XLSX) {
 	}
 
 	function readSync(data, opts) {
-		console.log('start reading...')
 		reset_cp();
 		if (typeof ArrayBuffer !== 'undefined' && data instanceof ArrayBuffer) return readSync(new Uint8Array(data), opts);
 		var d = data, n = [0, 0, 0, 0], str = false;

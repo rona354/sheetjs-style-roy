@@ -8882,6 +8882,7 @@ function parse_borders(t, styles, themes, opts) {
 	styles.Borders = [];
 	var border = {};
 	var pass = false;
+	var lastPosition = "";
 	(t[0].match(tagregex)||[]).forEach(function(x) {
 		var y = parsexmltag(x);
 		switch(strip_ns(y[0])) {
@@ -8897,24 +8898,40 @@ function parse_borders(t, styles, themes, opts) {
 			case '</border>': break;
 
 			/* note: not in spec, appears to be CT_BorderPr */
-			case '<left/>': break;
-			case '<left': case '<left>': break;
-			case '</left>': break;
+			case '<left': case '<left>':
+				if (!border.left) border.left = {};
+				if (!border.left.style) border.left.style = {};
+				if (y.style) border.left.style = y.style;
+				lastPosition = "left";
+				break;
+			case '<left/>': case '</left>': break;
 
 			/* note: not in spec, appears to be CT_BorderPr */
-			case '<right/>': break;
-			case '<right': case '<right>': break;
-			case '</right>': break;
+			case '<right': case '<right>':
+				if (!border.right) border.right = {};
+				if (!border.right.style) border.right.style = {};
+				if (y.style) border.right.style = y.style;
+				lastPosition = "right";
+				break;
+			case '</right>': case '<right/>': break;
 
 			/* 18.8.43 top CT_BorderPr */
-			case '<top/>': break;
-			case '<top': case '<top>': break;
-			case '</top>': break;
+			case '<top': case '<top>':
+				if (!border.top) border.top = {};
+				if (!border.top.style) border.top.style = {};
+				if (y.style) border.top.style = y.style;
+				lastPosition = "top";
+				break;
+			case '</top>': case '<top/>': break;
 
 			/* 18.8.6 bottom CT_BorderPr */
-			case '<bottom/>': break;
-			case '<bottom': case '<bottom>': break;
-			case '</bottom>': break;
+			case '<bottom': case '<bottom>':
+				if (!border.bottom) border.bottom = {};
+				if (!border.bottom.style) border.bottom.style = {};
+				if (y.style) border.bottom.style = y.style;
+				lastPosition = "bottom";
+				break;
+			case '</bottom>': case '<bottom/>': break;
 
 			/* 18.8.13 diagonal CT_BorderPr */
 			case '<diagonal': case '<diagonal>': case '<diagonal/>': break;
@@ -8938,6 +8955,12 @@ function parse_borders(t, styles, themes, opts) {
 
 			/* 18.8.? color CT_Color */
 			case '<color': case '<color>':
+				if (!border[lastPosition].color) border[lastPosition].color = {};
+				if (y.indexed) border[lastPosition].color.indexed = parseInt(y.indexed, 10);
+				if (y.theme) border[lastPosition].color.theme = parseInt(y.theme, 10);
+				if (y.tint) border[lastPosition].color.tint = parseFloat(y.tint);
+				/* Excel uses ARGB strings */
+				if (y.rgb) border[lastPosition].color.rgb = y.rgb.slice(-6);
 				break;
 			case '<color/>': case '</color>': break;
 
@@ -9297,6 +9320,10 @@ var STYLES_XML_ROOT = writextag('styleSheet', null, {
 RELS.STY = "http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles";
 
 function write_sty_xml(wb/*:Workbook*/, opts)/*:string*/ {
+	if (typeof style_builder != 'undefined' && typeof 'require' != 'undefined') {
+		return style_builder.toXml();
+	}
+
 	var o = [XML_HEADER, STYLES_XML_ROOT], w;
 	if(wb.SSF && (w = write_numFmts(wb.SSF)) != null) o[o.length] = w;
 	o[o.length] = ('<fonts count="1"><font><sz val="12"/><color theme="1"/><name val="Calibri"/><family val="2"/><scheme val="minor"/></font></fonts>');
@@ -13063,66 +13090,89 @@ function default_margins(margins/*:Margins*/, mode/*:?string*/) {
 }
 
 function get_cell_style(styles/*:Array<any>*/, cell/*:Cell*/, opts) {
-	var z = opts.revssf[cell.z != null ? cell.z : "General"];
-	var i = 0x3c, len = styles.length;
-	if(z == null && opts.ssf) {
-		for(; i < 0x188; ++i) if(opts.ssf[i] == null) {
-			SSF.load(cell.z, i);
-			// $FlowIgnore
-			opts.ssf[i] = cell.z;
-			opts.revssf[cell.z] = z = i;
-			break;
+	if (typeof style_builder != 'undefined') {
+		if (/^\d+$/.exec(cell.s)) { return cell.s }  // if its already an integer index, let it be
+		if (cell.s && (cell.s == +cell.s)) { return cell.s }  // if its already an integer index, let it be
+		var s = cell.s || {};
+		if (cell.z) s.numFmt = cell.z;
+		return style_builder.addStyle(s);
+	} else {
+		var z = opts.revssf[cell.z != null ? cell.z : "General"];
+		var i = 0x3c, len = styles.length;
+		if (z == null && opts.ssf) {
+			for (; i < 0x188; ++i) if (opts.ssf[i] == null) {
+				SSF.load(cell.z, i);
+				// $FlowIgnore
+				opts.ssf[i] = cell.z;
+				opts.revssf[cell.z] = z = i;
+				break;
+			}
 		}
+		for (i = 0; i != len; ++i) if (styles[i].numFmtId === z) return i;
+		styles[len] = {
+			numFmtId: z,
+			fontId: 0,
+			fillId: 0,
+			borderId: 0,
+			xfId: 0,
+			applyNumberFormat: 1
+		};
+		return len;
 	}
-	for(i = 0; i != len; ++i) if(styles[i].numFmtId === z) return i;
-	styles[len] = {
-		numFmtId:z,
-		fontId:0,
-		fillId:0,
-		borderId:0,
-		xfId:0,
-		applyNumberFormat:1
-	};
-	return len;
 }
 
-function safe_format(p/*:Cell*/, fmtid/*:number*/, fillid/*:?number*/, opts, themes, styles) {
+function safe_format(p/*:Cell*/, cf_copy/*:CellXf*/, opts, themes, styles) {
 	try {
-		if(opts.cellNF) p.z = SSF._table[fmtid];
-	} catch(e) { if(opts.WTF) throw e; }
-	if(p.t === 'z') return;
-	if(p.t === 'd' && typeof p.v === 'string') p.v = parseDate(p.v);
-	if(!opts || opts.cellText !== false) try {
-		if(SSF._table[fmtid] == null) SSF.load(SSFImplicit[fmtid] || "General", fmtid);
-		if(p.t === 'e') p.w = p.w || BErr[p.v];
-		else if(fmtid === 0) {
-			if(p.t === 'n') {
-				if((p.v|0) === p.v) p.w = SSF._general_int(p.v);
+		if (opts.cellNF) p.z = SSF._table[cf_copy.numFmtId];
+	} catch (e) { if (opts.WTF) throw e; }
+	// if (p.t === 'z') return;
+	if (p.t === 'd' && typeof p.v === 'string') p.v = parseDate(p.v);
+	if ((!opts || opts.cellText !== false) && p.v) try {
+		if (SSF._table[cf_copy.numFmtId] == null) SSF.load(SSFImplicit[cf_copy.numFmtId] || "General", fmtid);
+		if (p.t === 'e') p.w = p.w || BErr[p.v];
+		else if (cf_copy.numFmtId === 0) {
+			if (p.t === 'n') {
+				if ((p.v | 0) === p.v) p.w = SSF._general_int(p.v);
 				else p.w = SSF._general_num(p.v);
 			}
-			else if(p.t === 'd') {
+			else if (p.t === 'd') {
 				var dd = datenum(p.v);
-				if((dd|0) === dd) p.w = SSF._general_int(dd);
+				if ((dd | 0) === dd) p.w = SSF._general_int(dd);
 				else p.w = SSF._general_num(dd);
 			}
-			else if(p.v === undefined) return "";
-			else p.w = SSF._general(p.v,_ssfopts);
+			else if (p.v === undefined) return "";
+			else p.w = SSF._general(p.v, _ssfopts);
 		}
-		else if(p.t === 'd') p.w = SSF.format(fmtid,datenum(p.v),_ssfopts);
-		else p.w = SSF.format(fmtid,p.v,_ssfopts);
-	} catch(e) { if(opts.WTF) throw e; }
-	if(!opts.cellStyles) return;
-	if(fillid != null) try {
-		p.s = styles.Fills[fillid];
-		if (p.s.fgColor && p.s.fgColor.theme && !p.s.fgColor.rgb) {
-			p.s.fgColor.rgb = rgb_tint(themes.themeElements.clrScheme[p.s.fgColor.theme].rgb, p.s.fgColor.tint || 0);
-			if(opts.WTF) p.s.fgColor.raw_rgb = themes.themeElements.clrScheme[p.s.fgColor.theme].rgb;
+		else if (p.t === 'd') p.w = SSF.format(cf_copy.numFmtId, datenum(p.v), _ssfopts);
+		else p.w = SSF.format(cf_copy.numFmtId, p.v, _ssfopts);
+	} catch (e) { if (opts.WTF) throw e; }
+	if (!opts.cellStyles) return;
+	if (cf_copy.fillId !== null) try {
+		p.s = {
+			fill: styles.Fills[cf_copy.fillId],
+			font: styles.Fonts[cf_copy.fontId],
+			border: styles.Borders[cf_copy.borderId]
+		};
+		if (p.s.fill.fgColor && p.s.fill.fgColor.theme && !p.s.fill.fgColor.rgb) {
+			p.s.fill.fgColor.rgb = rgb_tint(themes.themeElements.clrScheme[p.s.fill.fgColor.theme].rgb, p.s.fill.fgColor.tint || 0);
+			if (opts.WTF) p.s.fill.fgColor.raw_rgb = themes.themeElements.clrScheme[p.s.fill.fgColor.theme].rgb;
 		}
-		if (p.s.bgColor && p.s.bgColor.theme) {
-			p.s.bgColor.rgb = rgb_tint(themes.themeElements.clrScheme[p.s.bgColor.theme].rgb, p.s.bgColor.tint || 0);
-			if(opts.WTF) p.s.bgColor.raw_rgb = themes.themeElements.clrScheme[p.s.bgColor.theme].rgb;
+		if (p.s.fill.bgColor && p.s.fill.bgColor.theme) {
+			p.s.fill.bgColor.rgb = rgb_tint(themes.themeElements.clrScheme[p.s.fill.bgColor.theme].rgb, p.s.fill.bgColor.tint || 0);
+			if (opts.WTF) p.s.fill.bgColor.raw_rgb = themes.themeElements.clrScheme[p.s.fill.bgColor.theme].rgb;
 		}
-	} catch(e) { if(opts.WTF && styles.Fills) throw e; }
+		if (p.s.font.color && p.s.font.color.theme) {
+			p.s.font.color.rgb = rgb_tint(themes.themeElements.clrScheme[p.s.font.color.theme].rgb, p.s.font.color.tint || 0);
+			if (opts.WTF) p.s.font.color.raw_rgb = themes.themeElements.clrScheme[p.s.font.color.theme].rgb;
+		}
+		if (p.s.font.color && p.s.font.color.theme) {
+			p.s.font.color.rgb = rgb_tint(themes.themeElements.clrScheme[p.s.font.color.theme].rgb, p.s.font.color.tint || 0);
+			if (opts.WTF) p.s.font.color.raw_rgb = themes.themeElements.clrScheme[p.s.font.color.theme].rgb;
+		}
+		if (cf_copy.alignment) {
+			p.s.alignment = cf_copy.alignment;
+		}
+	} catch (e) { if (opts.WTF && styles.Fills) throw e; }
 }
 
 function check_ws(ws/*:Worksheet*/, sname/*:string*/, i/*:number*/) {
@@ -13375,10 +13425,12 @@ function write_ws_xml_sheetviews(ws, opts, idx, wb)/*:string*/ {
 }
 
 function write_ws_xml_cell(cell/*:Cell*/, ref, ws, opts/*::, idx, wb*/)/*:string*/ {
-	if(cell.v === undefined && cell.f === undefined || cell.t === 'z') return "";
+	// if(cell.v === undefined && cell.f === undefined || cell.t === 'z') return "";
+	if (cell.v === undefined && cell.f === undefined) return "";
 	var vv = "";
 	var oldt = cell.t, oldv = cell.v;
-	if(cell.t !== "z") switch(cell.t) {
+	// if(cell.t !== "z") switch(cell.t) {
+	switch(cell.t) {
 		case 'b': vv = cell.v ? "1" : "0"; break;
 		case 'n': vv = ''+cell.v; break;
 		case 'e': vv = BErr[cell.v]; break;
@@ -13510,7 +13562,11 @@ return function parse_ws_xml_data(sdata/*:string*/, s, opts, guess/*:Range*/, th
 				if(p.f || p.F) {
 					p.v = 0; p.t = "n";
 				} else if(!opts.sheetStubs) continue;
-				else p.t = "z";
+				// else p.t = "z";
+				else {
+					p.t = "z";
+					p.v = "";
+				}
 			}
 			else p.t = tag.t || "n";
 			if(guess.s.c > tagc) guess.s.c = tagc;
@@ -13558,18 +13614,21 @@ return function parse_ws_xml_data(sdata/*:string*/, s, opts, guess/*:Range*/, th
 					p.v = RBErr[p.v]; break;
 			}
 			/* formatting */
-			fmtid = fillid = 0;
+			// fmtid = fillid = 0;
 			cf = null;
-			if(do_format && tag.s !== undefined) {
+			if (do_format && tag.s !== undefined) {
 				cf = styles.CellXf[tag.s];
-				if(cf != null) {
-					if(cf.numFmtId != null) fmtid = cf.numFmtId;
-					if(opts.cellStyles) {
-						if(cf.fillId != null) fillid = cf.fillId;
-					}
-				}
+				// if (cf != null) {
+				// 	if (cf.numFmtId != null) fmtid = cf.numFmtId;
+				// 	if (opts.cellStyles) {
+				// 		if (cf.fillId != null) {
+				// 			fillid = cf.fillId;
+				// 		}
+				// 	}
+				// }
 			}
-			safe_format(p, fmtid, fillid, opts, themes, styles);
+			// safe_format(p, fmtid, fillid, opts, themes, styles);
+			safe_format(p, cf, opts, themes, styles);
 			if(opts.cellDates && do_format && p.t == 'n' && SSF.is_date(SSF._table[fmtid])) { p.t = 'd'; p.v = numdate(p.v); }
 			if(dense) {
 				var _r = decode_cell(tag.r);
@@ -14220,7 +14279,7 @@ function parse_ws_bin(data, _opts, idx, rels, wb/*:WBWBProps*/, themes, styles)/
 					case 'e': p.v = val[1]; if(opts.cellText !== false) p.w = BErr[p.v]; break;
 					case 'str': p.t = 's'; p.v = val[1]; break;
 				}
-				if((cf = styles.CellXf[val[0].iStyleRef])) safe_format(p,cf.numFmtId,null,opts, themes, styles);
+				if ((cf = styles.CellXf[val[0].iStyleRef])) safe_format(p, cf, opts, themes, styles);
 				C = val[0].c;
 				if(opts.dense) { if(!s[R]) s[R] = []; s[R][C] = p; }
 				else s[encode_col(C) + rr] = p;
@@ -20940,6 +20999,7 @@ function write_cfb_ctr(cfb/*:CFBContainer*/, o/*:WriteOpts*/)/*:any*/ {
 /*:: declare var encrypt_agile:any; */
 function write_zip_type(wb/*:Workbook*/, opts/*:?WriteOpts*/)/*:any*/ {
 	var o = opts||{};
+	style_builder = new StyleBuilder(opts);
 	var z = write_zip(wb, o);
 	var oopts = {};
 	if(o.compression) oopts.compression = 'DEFLATE';

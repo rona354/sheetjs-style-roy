@@ -473,7 +473,7 @@ function parse_ws_bin(data, _opts, idx, rels, wb/*:WBWBProps*/, themes, styles)/
 					case 'e': p.v = val[1]; if(opts.cellText !== false) p.w = BErr[p.v]; break;
 					case 'str': p.t = 's'; p.v = val[1]; break;
 				}
-				if((cf = styles.CellXf[val[0].iStyleRef])) safe_format(p,cf.numFmtId,null,opts, themes, styles);
+				if ((cf = styles.CellXf[val[0].iStyleRef])) safe_format(p, cf, opts, themes, styles);
 				C = val[0].c;
 				if(opts.dense) { if(!s[R]) s[R] = []; s[R][C] = p; }
 				else s[encode_col(C) + rr] = p;

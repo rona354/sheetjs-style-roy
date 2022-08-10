@@ -242,10 +242,12 @@ function write_ws_xml_sheetviews(ws, opts, idx, wb)/*:string*/ {
 }
 
 function write_ws_xml_cell(cell/*:Cell*/, ref, ws, opts/*::, idx, wb*/)/*:string*/ {
-	if(cell.v === undefined && cell.f === undefined || cell.t === 'z') return "";
+	// if(cell.v === undefined && cell.f === undefined || cell.t === 'z') return "";
+	if (cell.v === undefined && cell.f === undefined) return "";
 	var vv = "";
 	var oldt = cell.t, oldv = cell.v;
-	if(cell.t !== "z") switch(cell.t) {
+	// if(cell.t !== "z") switch(cell.t) {
+	switch(cell.t) {
 		case 'b': vv = cell.v ? "1" : "0"; break;
 		case 'n': vv = ''+cell.v; break;
 		case 'e': vv = BErr[cell.v]; break;
@@ -377,7 +379,11 @@ return function parse_ws_xml_data(sdata/*:string*/, s, opts, guess/*:Range*/, th
 				if(p.f || p.F) {
 					p.v = 0; p.t = "n";
 				} else if(!opts.sheetStubs) continue;
-				else p.t = "z";
+				// else p.t = "z";
+				else {
+					p.t = "z";
+					p.v = "";
+				}
 			}
 			else p.t = tag.t || "n";
 			if(guess.s.c > tagc) guess.s.c = tagc;
@@ -425,18 +431,21 @@ return function parse_ws_xml_data(sdata/*:string*/, s, opts, guess/*:Range*/, th
 					p.v = RBErr[p.v]; break;
 			}
 			/* formatting */
-			fmtid = fillid = 0;
+			// fmtid = fillid = 0;
 			cf = null;
-			if(do_format && tag.s !== undefined) {
+			if (do_format && tag.s !== undefined) {
 				cf = styles.CellXf[tag.s];
-				if(cf != null) {
-					if(cf.numFmtId != null) fmtid = cf.numFmtId;
-					if(opts.cellStyles) {
-						if(cf.fillId != null) fillid = cf.fillId;
-					}
-				}
+				// if (cf != null) {
+				// 	if (cf.numFmtId != null) fmtid = cf.numFmtId;
+				// 	if (opts.cellStyles) {
+				// 		if (cf.fillId != null) {
+				// 			fillid = cf.fillId;
+				// 		}
+				// 	}
+				// }
 			}
-			safe_format(p, fmtid, fillid, opts, themes, styles);
+			// safe_format(p, fmtid, fillid, opts, themes, styles);
+			safe_format(p, cf, opts, themes, styles);
 			if(opts.cellDates && do_format && p.t == 'n' && SSF.is_date(SSF._table[fmtid])) { p.t = 'd'; p.v = numdate(p.v); }
 			if(dense) {
 				var _r = decode_cell(tag.r);
