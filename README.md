@@ -121,4 +121,4 @@ Borders for merged areas are specified for each cell within the merged area.  So
 * bottom borders for the cells on the left
  
 ## Thanks
-[sheetjs-style]https://github.com/ShanaMaid/sheetjs-style)
+[sheetjs-style](https://github.com/ShanaMaid/sheetjs-style)
