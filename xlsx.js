@@ -8872,7 +8872,6 @@ function make_xlsx_lib(XLSX) {
 				/* 18.8.? color CT_Color */
 				case '<color': case '<color>':
 					if (!border[lastPosition].color) border[lastPosition].color = {};
-					if (!border[lastPosition].color) border[lastPosition].color = {};
 					if (y.indexed) border[lastPosition].color.indexed = parseInt(y.indexed, 10);
 					if (y.theme) border[lastPosition].color.theme = parseInt(y.theme, 10);
 					if (y.tint) border[lastPosition].color.tint = parseFloat(y.tint);
