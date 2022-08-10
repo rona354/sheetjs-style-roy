@@ -8798,6 +8798,7 @@ function make_xlsx_lib(XLSX) {
 		styles.Borders = [];
 		var border = {};
 		var pass = false;
+		var lastPosition = "";
 		(t[0].match(tagregex) || []).forEach(function (x) {
 			var y = parsexmltag(x);
 			switch (strip_ns(y[0])) {
@@ -8813,24 +8814,40 @@ function make_xlsx_lib(XLSX) {
 				case '</border>': break;
 
 				/* note: not in spec, appears to be CT_BorderPr */
-				case '<left/>': break;
-				case '<left': case '<left>': break;
-				case '</left>': break;
+				case '<left': case '<left>':
+					if (!border.left) border.left = {};
+					if (!border.left.style) border.left.style = {};
+					if (y.style) border.left.style = y.style;
+					lastPosition = "left";
+					break;
+				case '<left/>': case '</left>': break;
 
 				/* note: not in spec, appears to be CT_BorderPr */
-				case '<right/>': break;
-				case '<right': case '<right>': break;
-				case '</right>': break;
+				case '<right': case '<right>':
+					if (!border.right) border.right = {};
+					if (!border.right.style) border.right.style = {};
+					if (y.style) border.right.style = y.style;
+					lastPosition = "right";
+					break;
+				case '</right>': case '<right/>': break;
 
 				/* 18.8.43 top CT_BorderPr */
-				case '<top/>': break;
-				case '<top': case '<top>': break;
-				case '</top>': break;
+				case '<top': case '<top>':
+					if (!border.top) border.top = {};
+					if (!border.top.style) border.top.style = {};
+					if (y.style) border.top.style = y.style;
+					lastPosition = "top";
+					break;
+				case '</top>': case '<top/>': break;
 
 				/* 18.8.6 bottom CT_BorderPr */
-				case '<bottom/>': break;
-				case '<bottom': case '<bottom>': break;
-				case '</bottom>': break;
+				case '<bottom': case '<bottom>':
+					if (!border.bottom) border.bottom = {};
+					if (!border.bottom.style) border.bottom.style = {};
+					if (y.style) border.bottom.style = y.style;
+					lastPosition = "bottom";
+					break;
+				case '</bottom>': case '<bottom/>': break;
 
 				/* 18.8.13 diagonal CT_BorderPr */
 				case '<diagonal': case '<diagonal>': case '<diagonal/>': break;
@@ -8854,6 +8871,13 @@ function make_xlsx_lib(XLSX) {
 
 				/* 18.8.? color CT_Color */
 				case '<color': case '<color>':
+					if (!border[lastPosition].color) border[lastPosition].color = {};
+					if (!border[lastPosition].color) border[lastPosition].color = {};
+					if (y.indexed) border[lastPosition].color.indexed = parseInt(y.indexed, 10);
+					if (y.theme) border[lastPosition].color.theme = parseInt(y.theme, 10);
+					if (y.tint) border[lastPosition].color.tint = parseFloat(y.tint);
+					/* Excel uses ARGB strings */
+					if (y.rgb) border[lastPosition].color.rgb = y.rgb.slice(-6);
 					break;
 				case '<color/>': case '</color>': break;
 
