@@ -1,4 +1,4 @@
-<h1 align='center'>Sheetjs-style</h1>
+<h1 align='center'>sheetjs-style-roy</h1>
 <p align='center'>
   <a href="https://travis-ci.com/Yoshino-UI/Yoshino/">
     <img src="https://travis-ci.com/Yoshino-UI/Yoshino.svg" alt="travis ci badge">
@@ -121,5 +121,4 @@ Borders for merged areas are specified for each cell within the merged area.  So
 * bottom borders for the cells on the left
  
 ## Thanks
-[sheetjs](https://github.com/SheetJS/sheetjs)
-[js-xlsx](https://github.com/protobi/js-xlsx)
+[sheetjs-style]https://github.com/ShanaMaid/sheetjs-style)

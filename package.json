@@ -1,8 +1,8 @@
 {
-	"name": "sheetjs-style",
-	"version": "0.15.7",
-	"author": "sheetjs",
-	"description": "SheetJS Spreadsheet data parser and writer",
+	"name": "sheetjs-style-roy",
+	"version": "1.0",
+	"author": "sheetjs-style",
+	"description": "SheetJS Spreadsheet data parser and writer with enhanced style",
 	"keywords": [
 		"excel",
 		"xls",
@@ -52,7 +52,7 @@
 	},
 	"repository": {
 		"type": "git",
-		"url": "git://github.com/ShanaMaid/sheetjs-style.git"
+		"url": "git://github.com/rona354/sheetjs-style-roy.git"
 	},
 	"scripts": {
 		"pretest": "git submodule init && git submodule update",
@@ -78,7 +78,7 @@
 	},
 	"homepage": "https://sheetjs.com/",
 	"bugs": {
-		"url": "https://github.com/SheetJS/js-xlsx/issues"
+		"url": "https://github.com/rona354/sheetjs-style-roy/issues"
 	},
 	"license": "Apache-2.0",
 	"engines": {
