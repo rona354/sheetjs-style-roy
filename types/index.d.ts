@@ -856,8 +856,8 @@ export interface XLSX$Utils {
     sheet_add_json<T>(ws: WorkSheet, data: T[], opts?: SheetJSONOpts): WorkSheet;
 
     /** Replacing worksheets */
-    sheet_add_sheet(ws: WorkSheet, _sheet: WorkSheet, opts?: Sheet2JSONOpts): WorkSheet;
-    sheet_add_sheet<T>(ws: WorkSheet, _sheet: T, opts?: Sheet2JSONOpts): WorkSheet;
+    sheet_add_sheet(ws: WorkSheet, _sheet: WorkSheet, opts?: SheetJSONOpts): WorkSheet;
+    sheet_add_sheet<T>(ws: WorkSheet, _sheet: T, opts?: SheetJSONOpts): WorkSheet;
 
     consts: XLSX$Consts;
 }
