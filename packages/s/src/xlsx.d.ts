@@ -653,6 +653,8 @@ export interface JSON2SheetOpts extends CommonOptions, DateNFOption {
 
 export interface SheetJSONOpts extends JSON2SheetOpts, OriginOption {}
 
+export interface Sheet2SheetOpts extends Sheet2JSONOpts, OriginOption {}
+
 export interface Table2SheetOpts extends CommonOptions, DateNFOption {
     /* If true, plaintext parsing will not parse values */
     raw?: boolean;
@@ -776,8 +778,8 @@ export interface XLSX$Utils {
     sheet_add_json<T>(ws: WorkSheet, data: T[], opts?: SheetJSONOpts): WorkSheet;
 
     /** Replacing worksheets */
-    sheet_add_sheet(ws: WorkSheet, _sheet: WorkSheet, opts?: SheetJSONOpts): WorkSheet;
-    sheet_add_sheet<T>(ws: WorkSheet, _sheet: T, opts?: SheetJSONOpts): WorkSheet;
+    sheet_add_sheet(ws: WorkSheet, _sheet: WorkSheet, opts?: Sheet2SheetOpts): WorkSheet;
+    sheet_add_sheet<T>(ws: WorkSheet, _sheet: T, opts?: Sheet2SheetOpts): WorkSheet;
 
     consts: XLSX$Consts;
 }
