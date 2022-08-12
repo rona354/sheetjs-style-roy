@@ -73,7 +73,7 @@ module.exports = (hook) => {
 
 For an existing platform that already generates JSON or CSV or HTML output, the
 library can process the data and generate a new file with embellishments. The
-`XLSX.utils.sheet_add_json` and `XLSX.utils.sheet_add_aoa` functions can add
+`XLSX.utils.sheet_add_json` and `XLSX.utils.sheet_add_aoa` and `XLSX.utils.sheet_add_sheet` functions can add
 data rows to an existing worksheet:
 
 ```js
@@ -86,6 +86,7 @@ XLSX.utils.sheet_add_json(ws, [
 	{ item: "Coffee", cost: 5 },
 	{ item: "Cake", cost: 20 }
 ], { skipHeader: true, origin: -1, header: ["item", "cost"] });
+XLSX.utils.sheet_add_sheet(ws, _sheet, { skipHeader: true, origin: -1, header: ["item", "cost"] });
 ```
 
 

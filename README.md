@@ -19,35 +19,31 @@ npm install sheetjs-style-roy
 ## How to Use?
 Please read [SheetJs Documents](https://github.com/SheetJS/sheetjs/blob/3468395494c450ea8ba7e20afb1bd6127f516ccd/README.md)!
 
-## How to set cell Style?
+## Just like [sheetjs-style](https://github.com/ShanaMaid/sheetjs-style) but come with new features...
 for example:
 ```js
-const XLSX = require('sheetjs-style');
-const wb = XLSX.utils.book_new();
-const ws = XLSX.utils.json_to_sheet([{
-  0: 0,
-  1: 1,
-  2: 2
-}], {
-  header: ['0', '1', '2'],
-});
+  const selectedSheet = "Sheet1";
+  const secondSheet = "Sheet2";
+  const firstCol = "A";
+  const firstRow = "1"; 
 
-ws["A1"].s = { // set the style for target cell
-  font: {
-    name: '宋体',
-    sz: 24,
-    bold: true,
-    color: {
-      rgb: "FFFFAA00"
+  const mainSheet = getSheets(Workbook, selectedSheet);
+  const targetSheet = getSheets(Workbook, secondSheet);
+
+  XLSX.utils.sheet_add_sheet(   // replace a sheet with another sheet
+    choosenSheet,
+    targetSheet,
+    {
+      header: 1,
+      origin: firstCol + firstRow, // e.g. "A1" to skip the header
     }
-  },
-};
+  );
 
-XLSX.utils.book_append_sheet(wb, ws, 'sheet1'); // add worksheet to workbook
-
-XLSX.writeFile(wb, 'test.xlsx'); // write workbook
+  /** Attempts to write wb to filename. In browser-based environments, it will attempt to force a client-side download. */
+  XLSX.writeFile(Workbook, "test_mutated_data.xlsx", {
+    cellStyles: true,
+  });
 ```
-![单元格设置样式](./imgs/1.png)
 
 # Cell Styles
 

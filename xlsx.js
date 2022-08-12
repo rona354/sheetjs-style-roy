@@ -21123,6 +21123,39 @@ function make_xlsx_lib(XLSX) {
 		return out;
 	}
 
+	function sheet_add_sheet(_ws, sheet, opts) {
+		if (sheet == null || sheet["!ref"] == null) return {};
+		var val = { t: 'n', v: 0 }, header = 0, offset = 1, hdr = [], v = 0, vv = "";
+		var r = { s: { r: 0, c: 0 }, e: { r: 0, c: 0 } };
+		var ws = _ws || ({});
+		var o = opts || {};
+		var range = sheet["!ref"];
+		if (o.header === 1) header = 1;
+		else if (o.header === "A") header = 2;
+		else if (Array.isArray(o.header)) header = 3;
+		else if (o.header == null) header = 0;
+		switch (typeof range) {
+			case 'string': r = safe_decode_range(range); break;
+			case 'number': r = safe_decode_range(sheet["!ref"]); r.s.r = range; break;
+			default: r = range;
+		}
+		if (header > 0) offset = 0;
+		var sheetCol = [];	// ["A", "B", "C", ...]
+		var wsCol = decode_cell(o.origin);	// to number
+		var R = r.s.r, C = 0, CC = 0;
+		var wsCell = "";
+		for (C = r.s.c; C <= r.e.c; ++C) {
+			sheetCol[C] = encode_col(C);	// ex: "A"
+			for (R = r.s.r + offset; R <= r.e.r; ++R) {
+				val = sheet[sheetCol[C] + R];
+				if (val === undefined) continue;
+				wsCell = encode_col(wsCol.c + C) + encode_row(wsCol.r + R);
+				ws[wsCell] = val;
+			}
+		}
+		return ws;
+	}
+
 	var qreg = /"/g;
 	function make_csv_row(sheet, r, R, cols, fs, rs, FS, o) {
 		var isempty = true;
@@ -21289,6 +21322,7 @@ function make_xlsx_lib(XLSX) {
 		make_formulae: sheet_to_formulae,
 		sheet_add_aoa: sheet_add_aoa,
 		sheet_add_json: sheet_add_json,
+		sheet_add_sheet: sheet_add_sheet,
 		aoa_to_sheet: aoa_to_sheet,
 		json_to_sheet: json_to_sheet,
 		table_to_sheet: parse_dom_table,
