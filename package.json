@@ -1,6 +1,6 @@
 {
 	"name": "sheetjs-style-roy",
-	"version": "0.1.3",
+	"version": "0.1.4",
 	"author": "sheetjs-style",
 	"description": "SheetJS Spreadsheet data parser and writer with enhanced style",
 	"keywords": [
