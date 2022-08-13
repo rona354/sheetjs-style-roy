@@ -243,7 +243,7 @@ function write_ws_xml_sheetviews(ws, opts, idx, wb)/*:string*/ {
 
 function write_ws_xml_cell(cell/*:Cell*/, ref, ws, opts/*::, idx, wb*/)/*:string*/ {
 	// if(cell.v === undefined && cell.f === undefined || cell.t === 'z') return "";
-	if (cell.v === undefined && cell.f === undefined) return "";
+	// if (cell.v === undefined && cell.f === undefined) return "";
 	var vv = "";
 	var oldt = cell.t, oldv = cell.v;
 	// if(cell.t !== "z") switch(cell.t) {

@@ -13343,7 +13343,7 @@ function make_xlsx_lib(XLSX) {
 
 	function write_ws_xml_cell(cell, ref, ws, opts) {
 		// if(cell.v === undefined && cell.f === undefined || cell.t === 'z') return "";
-		if (cell.v === undefined && cell.f === undefined) return "";
+		// if (cell.v === undefined && cell.f === undefined) return "";
 		var vv = "";
 		var oldt = cell.t, oldv = cell.v;
 		// if(cell.t !== "z") switch(cell.t) {
@@ -21125,7 +21125,7 @@ function make_xlsx_lib(XLSX) {
 
 	function sheet_add_sheet(_ws, sheet, opts) {
 		if (sheet == null || sheet["!ref"] == null) return {};
-		var val = { t: 'n', v: 0 }, header = 0, offset = 1, hdr = [], v = 0, vv = "";
+		var val = { t: 'z', v: '', z: 'General' }, header = 0, offset = 1;
 		var r = { s: { r: 0, c: 0 }, e: { r: 0, c: 0 } };
 		var ws = _ws || ({});
 		var o = opts || {};
@@ -21140,17 +21140,28 @@ function make_xlsx_lib(XLSX) {
 			default: r = range;
 		}
 		if (header > 0) offset = 0;
-		var sheetCol = [];	// ["A", "B", "C", ...]
-		var wsCol = decode_cell(o.origin);	// to number
-		var R = r.s.r, C = 0, CC = 0;
-		var wsCell = "";
+		var sheetCol = [];	// would be ["A", "B", "C", ...]
+		var wsCol = decode_cell(o.origin);	// decode "O12" into: { c: 14, r: 11 }
+		var R = r.s.r, C = 0;
+		var targetAddress = "";
+		/**	append !merges from sheet to ws */
+		var mergesSheet = sheet['!merges'].map(function (each) {
+			return ({ s: { c: each.s.c + wsCol.c, r: each.s.r + wsCol.r }, e: { c: each.e.c + wsCol.c, r: each.e.r + wsCol.r } });
+		});
+		ws['!merges'] = [
+			...ws['!merges'],
+			...mergesSheet
+		];
+		// end of !merges sheets
 		for (C = r.s.c; C <= r.e.c; ++C) {
-			sheetCol[C] = encode_col(C);	// ex: "A"
+			sheetCol[C] = encode_col(C);	// pushing sheetCol e.g: ["A", "B", "C", ...]
+			ws['!cols'][wsCol.c + C] = sheet['!cols'][C];	// replace ws "!cols" from sheet's
 			for (R = r.s.r + offset; R <= r.e.r; ++R) {
-				val = sheet[sheetCol[C] + R];
-				if (val === undefined) continue;
-				wsCell = encode_col(wsCol.c + C) + encode_row(wsCol.r + R);
-				ws[wsCell] = val;
+				val = sheet[sheetCol[C] + encode_row(R)];
+				if (val === undefined) val = { t: 'z', v: '', z: 'General' };	// set default cell value
+				if (val && val.f) val.f = shift_formula_str(val.f, wsCol);	// shift formula address
+				targetAddress = encode_col(wsCol.c + C) + encode_row(wsCol.r + R);		// e.g: "O12"
+				ws[targetAddress] = val;
 			}
 		}
 		return ws;
