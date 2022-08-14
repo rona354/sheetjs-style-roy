@@ -13045,7 +13045,7 @@ function make_xlsx_lib(XLSX) {
 		// if (p.t === 'z') return;
 		if (p.t === 'd' && typeof p.v === 'string') p.v = parseDate(p.v);
 		if ((!opts || opts.cellText !== false) && p.v) try {
-			if (SSF._table[cf_copy.numFmtId] == null) SSF.load(SSFImplicit[cf_copy.numFmtId] || "General", fmtid);
+			if (SSF._table[cf_copy.numFmtId] == null) SSF.load(SSFImplicit[cf_copy.numFmtId] || "General", cf_copy.numFmtId);
 			if (p.t === 'e') p.w = p.w || BErr[p.v];
 			else if (cf_copy.numFmtId === 0) {
 				if (p.t === 'n') {
@@ -13546,7 +13546,7 @@ function make_xlsx_lib(XLSX) {
 					}
 					// safe_format(p, fmtid, fillid, opts, themes, styles);
 					safe_format(p, cf, opts, themes, styles);
-					if (opts.cellDates && do_format && p.t == 'n' && SSF.is_date(SSF._table[fmtid])) { p.t = 'd'; p.v = numdate(p.v); }
+					if (opts.cellDates && do_format && p.t == 'n' && SSF.is_date(SSF._table[cf.numFmtId])) { p.t = 'd'; p.v = numdate(p.v); }
 					if (dense) {
 						var _r = decode_cell(tag.r);
 						if (!s[_r.r]) s[_r.r] = [];
@@ -21145,13 +21145,11 @@ function make_xlsx_lib(XLSX) {
 		var R = r.s.r, C = 0;
 		var targetAddress = "";
 		/**	append !merges from sheet to ws */
-		var mergesSheet = sheet['!merges'].map(function (each) {
-			return ({ s: { c: each.s.c + wsCol.c, r: each.s.r + wsCol.r }, e: { c: each.e.c + wsCol.c, r: each.e.r + wsCol.r } });
-		});
-		ws['!merges'] = [
-			...ws['!merges'],
-			...mergesSheet
-		];
+		if (ws['!merges'] && Array.isArray(ws['!merges'])) {
+			sheet['!merges'].forEach(function (each) {
+				ws['!merges'].push({ s: { c: each.s.c + wsCol.c, r: each.s.r + wsCol.r }, e: { c: each.e.c + wsCol.c, r: each.e.r + wsCol.r } });
+			});
+		};
 		// end of !merges sheets
 		for (C = r.s.c; C <= r.e.c; ++C) {
 			sheetCol[C] = encode_col(C);	// pushing sheetCol e.g: ["A", "B", "C", ...]

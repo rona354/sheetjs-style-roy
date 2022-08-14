@@ -110,13 +110,11 @@ function sheet_add_sheet(_ws/*:Main Source*/, sheet/*:Sheet To Compare*/, opts/*
 	var R = r.s.r, C = 0;
 	var targetAddress = "";
 	/**	append !merges from sheet to ws */
-	var mergesSheet = sheet['!merges'].map(function (each) {
-		return ({ s: { c: each.s.c + wsCol.c, r: each.s.r + wsCol.r }, e: { c: each.e.c + wsCol.c, r: each.e.r + wsCol.r } });
-	});
-	ws['!merges'] = [
-		...ws['!merges'],
-		...mergesSheet
-	];
+	if (ws['!merges'] && Array.isArray(ws['!merges'])) {
+		sheet['!merges'].forEach(function (each) {
+			ws['!merges'].push({ s: { c: each.s.c + wsCol.c, r: each.s.r + wsCol.r }, e: { c: each.e.c + wsCol.c, r: each.e.r + wsCol.r } });
+		});
+	};
 	// end of !merges sheets
 	for (C = r.s.c; C <= r.e.c; ++C) {
 		sheetCol[C] = encode_col(C);	// pushing sheetCol e.g: ["A", "B", "C", ...]

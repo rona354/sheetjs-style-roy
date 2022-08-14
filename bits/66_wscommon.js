@@ -11,23 +11,23 @@ var browser_has_Map = typeof Map !== 'undefined';
 
 function get_sst_id(sst/*:SST*/, str/*:string*/, rev)/*:number*/ {
 	var i = 0, len = sst.length;
-	if(rev) {
-		if(browser_has_Map ? rev.has(str) : Object.prototype.hasOwnProperty.call(rev, str)) {
+	if (rev) {
+		if (browser_has_Map ? rev.has(str) : Object.prototype.hasOwnProperty.call(rev, str)) {
 			var revarr = browser_has_Map ? rev.get(str) : rev[str];
-			for(; i < revarr.length; ++i) {
-				if(sst[revarr[i]].t === str) { sst.Count ++; return revarr[i]; }
+			for (; i < revarr.length; ++i) {
+				if (sst[revarr[i]].t === str) { sst.Count++; return revarr[i]; }
 			}
 		}
-	} else for(; i < len; ++i) {
-		if(sst[i].t === str) { sst.Count ++; return i; }
+	} else for (; i < len; ++i) {
+		if (sst[i].t === str) { sst.Count++; return i; }
 	}
-	sst[len] = ({t:str}/*:any*/); sst.Count ++; sst.Unique ++;
-	if(rev) {
-		if(browser_has_Map) {
-			if(!rev.has(str)) rev.set(str, []);
+	sst[len] = ({ t: str }/*:any*/); sst.Count++; sst.Unique++;
+	if (rev) {
+		if (browser_has_Map) {
+			if (!rev.has(str)) rev.set(str, []);
 			rev.get(str).push(len);
 		} else {
-			if(!Object.prototype.hasOwnProperty.call(rev, str)) rev[str] = [];
+			if (!Object.prototype.hasOwnProperty.call(rev, str)) rev[str] = [];
 			rev[str].push(len);
 		}
 	}
@@ -35,29 +35,29 @@ function get_sst_id(sst/*:SST*/, str/*:string*/, rev)/*:number*/ {
 }
 
 function col_obj_w(C/*:number*/, col) {
-	var p = ({min:C+1,max:C+1}/*:any*/);
+	var p = ({ min: C + 1, max: C + 1 }/*:any*/);
 	/* wch (chars), wpx (pixels) */
 	var wch = -1;
-	if(col.MDW) MDW = col.MDW;
-	if(col.width != null) p.customWidth = 1;
-	else if(col.wpx != null) wch = px2char(col.wpx);
-	else if(col.wch != null) wch = col.wch;
-	if(wch > -1) { p.width = char2width(wch); p.customWidth = 1; }
-	else if(col.width != null) p.width = col.width;
-	if(col.hidden) p.hidden = true;
+	if (col.MDW) MDW = col.MDW;
+	if (col.width != null) p.customWidth = 1;
+	else if (col.wpx != null) wch = px2char(col.wpx);
+	else if (col.wch != null) wch = col.wch;
+	if (wch > -1) { p.width = char2width(wch); p.customWidth = 1; }
+	else if (col.width != null) p.width = col.width;
+	if (col.hidden) p.hidden = true;
 	return p;
 }
 
 function default_margins(margins/*:Margins*/, mode/*:?string*/) {
-	if(!margins) return;
+	if (!margins) return;
 	var defs = [0.7, 0.7, 0.75, 0.75, 0.3, 0.3];
-	if(mode == 'xlml') defs = [1, 1, 1, 1, 0.5, 0.5];
-	if(margins.left   == null) margins.left   = defs[0];
-	if(margins.right  == null) margins.right  = defs[1];
-	if(margins.top    == null) margins.top    = defs[2];
-	if(margins.bottom == null) margins.bottom = defs[3];
-	if(margins.header == null) margins.header = defs[4];
-	if(margins.footer == null) margins.footer = defs[5];
+	if (mode == 'xlml') defs = [1, 1, 1, 1, 0.5, 0.5];
+	if (margins.left == null) margins.left = defs[0];
+	if (margins.right == null) margins.right = defs[1];
+	if (margins.top == null) margins.top = defs[2];
+	if (margins.bottom == null) margins.bottom = defs[3];
+	if (margins.header == null) margins.header = defs[4];
+	if (margins.footer == null) margins.footer = defs[5];
 }
 
 function get_cell_style(styles/*:Array<any>*/, cell/*:Cell*/, opts) {
@@ -99,7 +99,7 @@ function safe_format(p/*:Cell*/, cf_copy/*:CellXf*/, opts, themes, styles) {
 	// if (p.t === 'z') return;
 	if (p.t === 'd' && typeof p.v === 'string') p.v = parseDate(p.v);
 	if ((!opts || opts.cellText !== false) && p.v) try {
-		if (SSF._table[cf_copy.numFmtId] == null) SSF.load(SSFImplicit[cf_copy.numFmtId] || "General", fmtid);
+		if (SSF._table[cf_copy.numFmtId] == null) SSF.load(SSFImplicit[cf_copy.numFmtId] || "General", cf_copy.numFmtId);
 		if (p.t === 'e') p.w = p.w || BErr[p.v];
 		else if (cf_copy.numFmtId === 0) {
 			if (p.t === 'n') {
@@ -147,8 +147,8 @@ function safe_format(p/*:Cell*/, cf_copy/*:CellXf*/, opts, themes, styles) {
 }
 
 function check_ws(ws/*:Worksheet*/, sname/*:string*/, i/*:number*/) {
-	if(ws && ws['!ref']) {
+	if (ws && ws['!ref']) {
 		var range = safe_decode_range(ws['!ref']);
-		if(range.e.c < range.s.c || range.e.r < range.s.r) throw new Error("Bad range (" + i + "): " + ws['!ref']);
+		if (range.e.c < range.s.c || range.e.r < range.s.r) throw new Error("Bad range (" + i + "): " + ws['!ref']);
 	}
 }
